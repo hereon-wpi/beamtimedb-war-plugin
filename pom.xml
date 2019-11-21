@@ -32,8 +32,10 @@
         <jax-rs-api.version>2.1.1</jax-rs-api.version>
         <resteasy.version>4.4.1.Final</resteasy.version>
         <tomcat.version>[9.0.12,)</tomcat.version>
+        <mongodb-driver.version>3.11.2</mongodb-driver.version>
         <slf4j-api.version>1.7.5</slf4j-api.version>
-        <custom.build.name>beamtimedb</custom.build.name>        
+        <custom.build.name>beamtimedb</custom.build.name>
+        <mongodb.host>localhost</mongodb.host>
     </properties>
 
 
@@ -87,7 +89,22 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.0</version>
-        </dependency>        
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-async</artifactId>
+            <version>${mongodb-driver.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jcl</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
