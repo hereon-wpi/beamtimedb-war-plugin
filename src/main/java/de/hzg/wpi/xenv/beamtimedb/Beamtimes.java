@@ -1,10 +1,7 @@
 package de.hzg.wpi.xenv.beamtimedb;
 
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.mongodb.Block;
-import com.mongodb.async.client.MongoClient;
+import com.mongodb.DBObject;
 import com.mongodb.async.client.MongoDatabase;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -15,10 +12,7 @@ import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
@@ -34,8 +28,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
  */
 @Path("/beamtimes")
 @Produces(APPLICATION_JSON)
-public class Schema {
-    private final Logger logger = LoggerFactory.getLogger(Schema.class);
+public class Beamtimes {
+    private final Logger logger = LoggerFactory.getLogger(Beamtimes.class);
 
     @GET
     @GZIP
@@ -49,6 +43,23 @@ public class Schema {
                     logger.debug("Done!");
                     response.resume(result);
         });
+    }
+
+    @POST
+    @GZIP
+    @Consumes(APPLICATION_JSON)
+    public void query(@Context MongoDatabase mongoClient,
+                    @Suspended final AsyncResponse response,
+                      Bson query){
+        List<String> result = Lists.newArrayList();
+        mongoClient.getCollection("beamtimes")
+                .find(query)
+                .map(Document::toJson)
+                .into(result,
+                        (aVoid, throwable) -> {
+                            logger.debug("Done!");
+                            response.resume(result);
+                        });
     }
 
     @GET
