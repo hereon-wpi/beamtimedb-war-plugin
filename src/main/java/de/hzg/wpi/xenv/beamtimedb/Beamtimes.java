@@ -1,14 +1,17 @@
 package de.hzg.wpi.xenv.beamtimedb;
 
 import com.google.common.collect.Lists;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.async.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.jongo.Jongo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

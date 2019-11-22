@@ -1,5 +1,6 @@
 package de.hzg.wpi.xenv.beamtimedb;
 
+import com.mongodb.BasicDBObject;
 import org.bson.BsonDocument;
 import org.bson.conversions.Bson;
 
@@ -35,6 +36,6 @@ public class BsonMapper implements MessageBodyReader<Bson> {
                 stringBuilder.append((char) c);
             }
         }
-        return BsonDocument.parse(stringBuilder.toString());
+        return BasicDBObject.parse(stringBuilder.toString());
     }
 }
