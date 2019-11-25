@@ -10,13 +10,32 @@ const kBeamtimesListPanelHeader = "<span class='webix_icon fa-table'></span> Bea
 const kBeamtimesBodyHeader = "<span class='webix_icon fa-table'></span> Beamtimes";
 const kBeamtimeDbApiEntryPoint = '/beamtimedb/api/beamtimes';
 
-const pipe_output = webix.protoUI({
-    name: "beamtime_output",
+//TODO prevent global scope
+RegExp.prototype.toJSON = function(){
+    return {
+        $regex: this.source,
+        $options: this.flags
+    }
+};
+
+const json_textarea = webix.protoUI({
+    name: "json_textarea",
+    /**
+     *
+     * @return {object} non-strict json object
+     */
+    getValue: function () {
+        return eval(`(function(){const q = {${this.editor.getValue()}}; return q;})();`);
+    },
+    /**
+     *
+     * @param {object|any} value
+     */
     update(value){
         if(!value) return;
         this.setValue(JSON.stringify(value));
         const totalLines = this.editor.lineCount();
-        this.editor.autoFormatRange({line:0, ch:0}, {line:totalLines});
+        this.editor.autoFormatRange({line: 0, ch: 0}, {line: totalLines});
     },
     $init(config){
         config.mode = "application/json"
@@ -32,7 +51,7 @@ function newList(){
             return obj.id;
         },
         on: {
-            onAfterSelect(id){
+            onItemClick(id){
                 OpenAjax.hub.publish("beamtimes_list.select.id",{
                     data: {
                         id: id
@@ -99,9 +118,9 @@ function newBeamtimesToolbar(){
     return {
         view: "toolbar",
         cols:[
-            {view:"textarea",id:"query"},
+            {view:"json_textarea",id:"query"},
             {view:"button",type:"icon",icon:"play", maxWidth:30, click(){
-                this.getTopParentView().query(JSON.parse(this.getTopParentView().$$('query').getValue()))
+                this.getTopParentView().query(this.getTopParentView().$$('query').getValue())
                 }}
         ]
     };
@@ -109,7 +128,7 @@ function newBeamtimesToolbar(){
 
 function newBeamtimeBody(){
     return {
-        view:"beamtime_output",
+        view:"json_textarea",
         id: "output"
     }
 }
@@ -127,7 +146,7 @@ function promiseBeamtimesBy(query){
     return ajax().headers({
             "Content-type": "application/json"
         })
-        .post(kBeamtimeDbApiEntryPoint, JSON.stringify(query))
+        .post(kBeamtimeDbApiEntryPoint, query)
         .then(response => response.json())
 
 }
