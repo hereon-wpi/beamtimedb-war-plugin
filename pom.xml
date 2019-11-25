@@ -214,7 +214,7 @@
                                         <fileSet>
                                             <directory>${project.build.directory}</directory>
                                             <includes>
-                                                <include>${project.build.finalName}</include>
+                                                <include>${project.build.finalName}.war</include>
                                             </includes>
                                         </fileSet>
                                     </fileSets>
