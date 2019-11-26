@@ -6,8 +6,8 @@
 //TODO import WaltzPlatform from "/waltz";
 import {codemirror_textarea} from "/waltz/resources/webix_widgets/scripting_console.js";
 
-const kBeamtimesListPanelHeader = "<span class='webix_icon fa-table'></span> Beamtimes";
-const kBeamtimesBodyHeader = "<span class='webix_icon fa-table'></span> Beamtimes";
+const kBeamtimesListPanelHeader = "<span class='webix_icon mdi mdi-table'></span> Beamtimes";
+const kBeamtimesBodyHeader = "<span class='webix_icon mdi mdi-table'></span> Beamtimes";
 const kBeamtimeDbApiEntryPoint = '/beamtimedb/api/beamtimes';
 
 //TODO prevent global scope
@@ -119,7 +119,7 @@ function newBeamtimesToolbar(){
         view: "toolbar",
         cols:[
             {view:"json_textarea",id:"query"},
-            {view:"button",type:"icon",icon:"play", maxWidth:30, click(){
+            {view:"button",type:"icon",icon:"mdi mdi-play", maxWidth:30, click(){
                 this.getTopParentView().query(this.getTopParentView().$$('query').getValue())
                 }}
         ]
