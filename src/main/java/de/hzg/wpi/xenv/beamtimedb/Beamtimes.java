@@ -1,17 +1,13 @@
 package de.hzg.wpi.xenv.beamtimedb;
 
 import com.google.common.collect.Lists;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.mongodb.async.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.core.ResteasyContext;
-import org.jongo.Jongo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +16,6 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -37,10 +32,16 @@ public class Beamtimes {
     @GET
     @GZIP
     public void get(@Context MongoDatabase mongoClient, @Suspended final AsyncResponse response){
-        List<String> result = Lists.newArrayList();
+        List<Document> result = Lists.newArrayList();
         mongoClient.getCollection("beamtimes")
                 .find()
-                .map(document -> document.get("beamtimeId").toString())
+                .map(document ->
+                        new Document("id", document.get("_id").toString())
+                                .append("beamtimeId", document.getString("beamtimeId"))
+                                .append("applicant", ((Document) document.get("applicant")).getString("username"))
+                                .append("leader", ((Document) document.get("leader")).getString("username"))
+                                .append("pi", ((Document) document.get("pi")).getString("username"))
+                )
                 .into(result,
                 (aVoid, throwable) -> {
                     logger.debug("Done!");

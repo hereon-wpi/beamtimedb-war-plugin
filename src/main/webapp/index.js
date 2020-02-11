@@ -4,6 +4,7 @@
  * @since 20.11.2019
  */
 //TODO import WaltzPlatform from "/waltz";
+import {EventBus} from "/eventbus/index.js";
 import {codemirror_textarea} from "/waltz/resources/webix_widgets/scripting_console.js";
 
 const kBeamtimesListPanelHeader = "<span class='webix_icon mdi mdi-table'></span> Beamtimes";
@@ -17,6 +18,11 @@ RegExp.prototype.toJSON = function(){
         $options: this.flags
     }
 };
+
+//TODO define this global object in waltz platform and inject here
+const eventbus = new EventBus();
+
+const kBeamtimesChannel = "beamtimes";
 
 const json_textarea = webix.protoUI({
     name: "json_textarea",
@@ -47,16 +53,25 @@ function newList(){
         view: "list",
         id: "list",
         select:true,
+        type: {
+            height: "auto"
+        },
         template(obj){
-            return obj.id;
+            return `<ul>
+                    <li>Applicant: ${obj.applicant}</li>
+                    <li>Principle Investigator: ${obj.pi}</li>
+                    <li>Leader: ${obj.leader}</li>
+                    <li>Id: ${obj.beamtimeId}</li>
+                    </ul>`;
         },
         on: {
             onItemClick(id){
-                OpenAjax.hub.publish("beamtimes_list.select.id",{
+                const beamtime = this.getItem(id);
+                eventbus.publish("beamtimes_list.select.id", {
                     data: {
-                        id: id
+                        id: beamtime.beamtimeId
                     }
-                });
+                }, kBeamtimesChannel);
             }
         }
     };
@@ -72,17 +87,16 @@ const beamtimes_list_ui =
 
 const ajax = webix.ajax;
 
-function promiseBeamtimesIds(){
+function promiseBeamtimes() {
     return ajax(kBeamtimeDbApiEntryPoint)
         .then(response => response.json())
-        .then(ids => ids.map(id => ({id:id})))
 }
 
 const beamtimes_list = webix.protoUI(
     {
         name: 'beamtimes_list',
         refresh(){
-            promiseBeamtimesIds()
+            promiseBeamtimes()
                 .then(ids => {
                     this.$$('list').clearAll();
                     this.$$('list').parse(ids);
@@ -100,18 +114,16 @@ const beamtimes_list = webix.protoUI(
             this.$ready.push(() => {
                 this.refresh();
             });
-        },
-        defaults:{
-            on:{
-                "left_panel_toolbar.click.refresh subscribe"(){
-                    //TODO avoid this hardcoded if statement; isVisible always true
+
+            this.$ready.push(() => {
+                eventbus.subscribe("left_panel_toolbar.click.refresh", (event) => {
                     if($$('left_panel').getChildViews()[0] === this.getParentView() &&
                         !$$('left_panel').getChildViews()[0].config.collapsed)
                         this.refresh();
-                }
-            }
+                }, kBeamtimesChannel);
+            });
         }
-    }, TangoWebappPlatform.mixin.OpenAjaxListener, webix.ProgressBar, webix.IdSpace, webix.ui.layout
+    }, webix.ProgressBar, webix.IdSpace, webix.ui.layout
 );
 
 function newBeamtimesToolbar(){
@@ -159,15 +171,14 @@ const beamtimes_body = webix.protoUI({
     },
     $init(config){
         webix.extend(config, newBeamtimesBodyUI())
-    },
-    defaults:{
-        on:{
-            "beamtimes_list.select.id subscribe"(event){
+
+        this.$ready.push(() => {
+            eventbus.subscribe("beamtimes_list.select.id", (event) => {
                 this.query({beamtimeId:event.data.id})
-            }
-        }
+            }, kBeamtimesChannel);
+        });
     }
-}, TangoWebappPlatform.mixin.OpenAjaxListener, webix.ProgressBar, webix.IdSpace, webix.ui.layout);
+}, webix.ProgressBar, webix.IdSpace, webix.ui.layout);
 
 export function newBeamtimeDbIdsList(){
     return {
