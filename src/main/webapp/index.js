@@ -6,6 +6,7 @@
 //TODO import WaltzPlatform from "/waltz";
 import {EventBus} from "/eventbus/index.js";
 import filter from "./beamtimes_filter.js";
+import newBeamtimesTreeTable from "./beamtimes_treetable.js";
 import newSearch from "/waltz/resources/webix_widgets/search.js";
 import {codemirror_textarea} from "/waltz/resources/webix_widgets/scripting_console.js";
 
@@ -148,18 +149,12 @@ function newBeamtimesToolbar(){
     };
 }
 
-function newBeamtimeBody(){
-    return {
-        view:"json_textarea",
-        id: "output"
-    }
-}
 
 function newBeamtimesBodyUI(){
     return {
         rows:[
             newBeamtimesToolbar(),
-            newBeamtimeBody()
+            newBeamtimesTreeTable()
         ]
     }
 }
@@ -177,7 +172,7 @@ const beamtimes_body = webix.protoUI({
     name: 'beamtimes_body',
     query(query){
         promiseBeamtimesBy(query)
-            .then(beamtimes => this.$$('output').update(beamtimes.map(beamtime => JSON.parse(beamtime))))
+            .then(beamtimes => this.$$('output').parse(beamtimes.map(beamtime => JSON.parse(beamtime))))
     },
     $init(config){
         webix.extend(config, newBeamtimesBodyUI())

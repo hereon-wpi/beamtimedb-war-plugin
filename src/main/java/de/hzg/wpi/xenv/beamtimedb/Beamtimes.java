@@ -58,6 +58,10 @@ public class Beamtimes {
         List<String> result = Lists.newArrayList();
         mongoClient.getCollection("beamtimes")
                 .find(query)
+                .map(document -> {
+                    document.put("id", document.get("_id").toString());
+                    return document;
+                })
                 .map(Document::toJson)
                 .into(result,
                         (aVoid, throwable) -> {
