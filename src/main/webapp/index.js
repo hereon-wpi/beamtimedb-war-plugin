@@ -5,6 +5,8 @@
  */
 //TODO import WaltzPlatform from "/waltz";
 import {EventBus} from "/eventbus/index.js";
+import filter from "./beamtimes_filter.js";
+import newSearch from "/waltz/resources/webix_widgets/search.js";
 import {codemirror_textarea} from "/waltz/resources/webix_widgets/scripting_console.js";
 
 const kBeamtimesListPanelHeader = "<span class='webix_icon mdi mdi-table'></span> Beamtimes";
@@ -64,6 +66,13 @@ function newList(){
                     <li>Id: ${obj.beamtimeId}</li>
                     </ul>`;
         },
+        scheme: {
+            $init(obj) {
+                for (const property in obj) {
+                    obj[`${property}_lower`] = obj[property].toLowerCase();
+                }
+            }
+        },
         on: {
             onItemClick(id){
                 const beamtime = this.getItem(id);
@@ -81,6 +90,7 @@ function newList(){
 const beamtimes_list_ui =
     {
         rows: [
+            newSearch("list", filter),
             newList()
         ]
     };
