@@ -81,6 +81,10 @@ public class Beamtimes {
 
         finalMongoDatabase.getCollection("beamtimes")
                 .find(filter)
+                .map(document -> {
+                    document.put("id", document.get("_id").toString());
+                    return document;
+                })
                 .map(Document::toJson)
                 .first((result, throwable) -> {
                     if (result == null) {
