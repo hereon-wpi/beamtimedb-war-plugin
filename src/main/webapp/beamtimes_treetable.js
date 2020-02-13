@@ -3,22 +3,29 @@
  * @author Igor Khokhriakov <igor.khokhriakov@hzg.de>
  * @since 11.02.2020
  */
-export function parseBeamtime(beamtime) {
-    const result = [];
-    for (const key in Object.keys(beamtime)) {
-        if (["applicant", "leader", "pi"].includes(key)) {
-
-        } else if (["scans", "recos"].includes(key)) {
-
+export function parseBeamtime(beamtime, id = beamtime.id) {
+    return Object.keys(beamtime).map(key => {
+        if (beamtime[key] === null || beamtime[key] === undefined) {
+            return {
+                id: `${id}.${key}`,
+                key,
+                value: undefined
+            }
+        }
+        if (typeof beamtime[key] == "object") {
+            return {
+                id: `${id}.${key}`,
+                key,
+                data: parseBeamtime(beamtime[key], `${id}.${key}`)
+            }
         } else {
-            result.push({
-                id: `${beamtime.id}.${key}`,
+            return {
+                id: `${id}.${key}`,
                 key,
                 value: beamtime[key]
-            })
+            };
         }
-    }
-    return result;
+    });
 }
 
 export function newBeamtimesTreeTable() {

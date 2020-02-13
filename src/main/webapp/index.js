@@ -172,7 +172,7 @@ const beamtimes_body = webix.protoUI({
     name: 'beamtimes_body',
     query(query){
         promiseBeamtimesBy(query)
-            .then(beamtimes => this.$$('output').parse(beamtimes.map(beamtime => parseBeamtime(JSON.parse(beamtime)))))
+            .then(beamtimes => this.$$('output').parse(beamtimes.flatMap(beamtime => parseBeamtime(JSON.parse(beamtime)))))
     },
     $init(config){
         webix.extend(config, newBeamtimesBodyUI())
