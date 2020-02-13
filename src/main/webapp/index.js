@@ -36,6 +36,9 @@ const json_textarea = webix.protoUI({
     getValue: function () {
         return eval(`(function(){const q = {${this.editor.getValue()}}; return q;})();`);
     },
+    getValueRaw() {
+        return this.editor.getValue();
+    },
     /**
      *
      * @param {object|any} value
@@ -137,23 +140,134 @@ const beamtimes_list = webix.protoUI(
     }, webix.ProgressBar, webix.IdSpace, webix.ui.layout
 );
 
-function newBeamtimesToolbar(){
+function newBeamtimesToolbar() {
     return {
         view: "toolbar",
-        cols:[
-            {view:"json_textarea",id:"query"},
-            {view:"button",type:"icon",icon:"mdi mdi-play", maxWidth:30, click(){
-                this.getTopParentView().query(this.getTopParentView().$$('query').getValue())
-                }}
+        cols: [
+            {
+                maxWidth: 380,
+                view: 'text',
+                id: 'query_name',
+                name: 'query_name',
+                placeholder: 'query name',
+                label: 'Query name:',
+                labelWidth: 100,
+                validate: webix.rules.isNotEmpty,
+                invalidMessage: "Query name can not be empty",
+                on: {
+                    /**
+                     * Event listener.
+                     * @memberof ui.ScriptingConsole.upper_toolbar
+                     */
+                    onBindApply: function (script) {
+                        if (!script || script.id === undefined) {
+                            this.setValue(''); //reset this value after script removal
+                            return false;
+                        }
+                        this.setValue(script.id);
+                    },
+                    /**
+                     * Event listener. Work-around [object Object] in this field.
+                     * @memberof ui.ScriptingConsole.upper_toolbar
+                     */
+                    onBindRequest: function () {
+                        if (typeof this.data.value === 'object')
+                            this.data.value = '';
+                    }
+                }
+            },
+            {
+                view: "icon",
+                icon: 'wxi-check',
+                click: function () {
+                    this.getTopParentView().save();
+                },
+                hotkey: 'ctrl+s',
+                tooltip: 'Hotkey: ctrl+s'
+            },
+            {
+                view: "icon",
+                icon: 'wxi-trash',
+                click: function () {
+                    this.getTopParentView().remove();
+                }
+            }
         ]
-    };
+    }
 }
 
+const stateful_list = webix.protoUI({
+    name: "stateful_list",
+    _config() {
+        return {
+            select: true,
+            template(obj) {
+                return `<span class="webix_icon mdi mdi-file-document-outline"></span> ${obj.id}`;
+            }
+        }
+    },
+    addStateful(item) {
+        this.add(item);
+
+        this.state.updateState({
+            [item.id]: item
+        });
+    },
+    updateItemStateful(id, item) {
+        this.updateItem(id, item);
+
+        this.state.updateState({
+            [item.id]: item
+        });
+    },
+    removeStateful(id) {
+        this.remove(id);
+
+        delete this.state.data[id];
+
+        this.state.updateState();
+    },
+    restoreState(state) {
+        this.parse(Object.keys(state.data).map(key => state.data[key]));
+    },
+    $init(config) {
+        webix.extend(config, this._config())
+    },
+    defaults: {
+        on: {
+            onAfterSelect: function (id) {
+                this.getTopParentView().$$('query').setValue(this.getItem(id).code);
+            }
+        }
+    }
+},/*import*/TangoWebappPlatform.mixin.Stateful, webix.ui.list);
+
+
+function newBeamtimesQuery() {
+    return {
+        cols: [
+            {
+                view: "stateful_list",
+                id: 'queries_list'
+            },
+            {view: "json_textarea", id: "query", gravity: 2},
+            {
+                view: "button", type: "icon", icon: "mdi mdi-play", maxWidth: 30, click() {
+                    this.getTopParentView().query(this.getTopParentView().$$('query').getValue())
+                }
+            }
+        ]
+    }
+}
 
 function newBeamtimesBodyUI(){
     return {
         rows:[
             newBeamtimesToolbar(),
+            newBeamtimesQuery(),
+            {
+                view: "resizer"
+            },
             newBeamtimesTreeTable()
         ]
     }
@@ -168,8 +282,43 @@ function promiseBeamtimesBy(query){
 
 }
 
+class UserQuery {
+    constructor(id, code) {
+        this.id = id;
+        this.code = code;
+    }
+}
+
 const beamtimes_body = webix.protoUI({
     name: 'beamtimes_body',
+    save() {
+        if (!this.isVisible() || this.$destructed) return;
+
+        if (!this.$$('query_name').validate()) return null;
+        const name = this.$$('query_name').getValue().trim();
+        const code = this.$$('query').getValueRaw();
+
+        const query = this.$$('queries_list').getItem(name);
+
+        if (query === undefined)
+            this.$$('queries_list').addStateful(new UserQuery(name, code));
+        else
+            this.$$('queries_list').updateItemStateful(name, {
+                id: name,
+                code
+            });
+    },
+    remove() {
+        if (!this.isVisible() || this.$destructed) return;
+
+        if (!this.$$('query_name').validate()) return null;
+        const name = this.$$('query_name').getValue().trim();
+
+        const query = this.$$('queries_list').getItem(name);
+
+        if (query !== undefined)
+            this.$$('queries_list').removeStateful(name);
+    },
     query(query){
         promiseBeamtimesBy(query)
             .then(beamtimes => {
@@ -178,13 +327,18 @@ const beamtimes_body = webix.protoUI({
             })
     },
     $init(config){
-        webix.extend(config, newBeamtimesBodyUI())
+        webix.extend(config, newBeamtimesBodyUI());
 
         this.$ready.push(() => {
             eventbus.subscribe("beamtimes_list.select.id", (event) => {
                 this.query({beamtimeId:event.data.id})
             }, kBeamtimesChannel);
         });
+
+        this.$ready.push(() => {
+            //TODO this.$$('query').bind(this.$$('queries_list'));
+            this.$$('query_name').bind(this.$$('queries_list'));
+        })
     }
 }, webix.ProgressBar, webix.IdSpace, webix.ui.layout);
 
