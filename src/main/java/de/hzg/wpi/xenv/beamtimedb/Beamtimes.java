@@ -1,7 +1,6 @@
 package de.hzg.wpi.xenv.beamtimedb;
 
 import com.google.common.collect.Lists;
-import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.MongoDatabase;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -43,13 +42,10 @@ public class Beamtimes {
                                 .append("pi", ((Document) document.get("pi")).getString("username"))
                 )
                 .into(Lists.newArrayList(),
-                        new SingleResultCallback<List<Document>>() {
-                            @Override
-                            public void onResult(List<Document> result, Throwable t) {
-                                logger.debug("Done!");
-                                response.resume(result);
-                            }
-                        });
+                (result, throwable) -> {
+                    logger.debug("Done!");
+                    response.resume(result);
+        });
     }
 
     @POST
@@ -66,12 +62,9 @@ public class Beamtimes {
                 })
                 .map(Document::toJson)
                 .into(Lists.newArrayList(),
-                        new SingleResultCallback<List<String>>() {
-                            @Override
-                            public void onResult(List<String> result, Throwable t) {
-                                logger.debug("Done!");
-                                response.resume(result);
-                            }
+                        (result, throwable) -> {
+                            logger.debug("Done!");
+                            response.resume(result);
                         });
     }
 
