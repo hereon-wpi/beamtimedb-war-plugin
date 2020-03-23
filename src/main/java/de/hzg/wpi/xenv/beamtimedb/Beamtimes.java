@@ -16,7 +16,7 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.util.List;
+import java.util.Optional;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -29,6 +29,10 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 public class Beamtimes {
     private final Logger logger = LoggerFactory.getLogger(Beamtimes.class);
 
+    private String getUsernameOrDefault(String fieldName, Document document){
+        return Optional.ofNullable((Document) document.get(fieldName)).orElse(new Document("username", "unknown")).getString("username");
+    }
+
     @GET
     @GZIP
     public void get(@Context MongoDatabase mongoClient, @Suspended final AsyncResponse response){
@@ -37,9 +41,9 @@ public class Beamtimes {
                 .map(document ->
                         new Document("id", document.get("_id").toString())
                                 .append("beamtimeId", document.getString("beamtimeId"))
-                                .append("applicant", ((Document) document.get("applicant")).getString("username"))
-                                .append("leader", ((Document) document.get("leader")).getString("username"))
-                                .append("pi", ((Document) document.get("pi")).getString("username"))
+                                .append("applicant", getUsernameOrDefault("applicant", document))
+                                .append("leader", getUsernameOrDefault("leader", document))
+                                .append("pi", getUsernameOrDefault("pi", document))
                 )
                 .into(Lists.newArrayList(),
                 (result, throwable) -> {
