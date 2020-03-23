@@ -1,6 +1,7 @@
 package de.hzg.wpi.xenv.beamtimedb;
 
 import com.google.common.collect.Lists;
+import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.MongoDatabase;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
@@ -32,7 +33,6 @@ public class Beamtimes {
     @GET
     @GZIP
     public void get(@Context MongoDatabase mongoClient, @Suspended final AsyncResponse response){
-        List<Document> result = Lists.newArrayList();
         mongoClient.getCollection("beamtimes")
                 .find()
                 .map(document ->
@@ -42,11 +42,14 @@ public class Beamtimes {
                                 .append("leader", ((Document) document.get("leader")).getString("username"))
                                 .append("pi", ((Document) document.get("pi")).getString("username"))
                 )
-                .into(result,
-                (aVoid, throwable) -> {
-                    logger.debug("Done!");
-                    response.resume(result);
-        });
+                .into(Lists.newArrayList(),
+                        new SingleResultCallback<List<Document>>() {
+                            @Override
+                            public void onResult(List<Document> result, Throwable t) {
+                                logger.debug("Done!");
+                                response.resume(result);
+                            }
+                        });
     }
 
     @POST
@@ -55,7 +58,6 @@ public class Beamtimes {
     public void query(@Context MongoDatabase mongoClient,
                     @Suspended final AsyncResponse response,
                       Bson query){
-        List<String> result = Lists.newArrayList();
         mongoClient.getCollection("beamtimes")
                 .find(query)
                 .map(document -> {
@@ -63,10 +65,13 @@ public class Beamtimes {
                     return document;
                 })
                 .map(Document::toJson)
-                .into(result,
-                        (aVoid, throwable) -> {
-                            logger.debug("Done!");
-                            response.resume(result);
+                .into(Lists.newArrayList(),
+                        new SingleResultCallback<List<String>>() {
+                            @Override
+                            public void onResult(List<String> result, Throwable t) {
+                                logger.debug("Done!");
+                                response.resume(result);
+                            }
                         });
     }
 
