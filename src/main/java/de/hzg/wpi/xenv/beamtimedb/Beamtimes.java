@@ -44,6 +44,8 @@ public class Beamtimes {
                 .into(Lists.newArrayList(),
                 (result, throwable) -> {
                     logger.debug("Done!");
+                    if(throwable != null) response.resume(throwable);
+                    else
                     response.resume(result);
         });
     }
@@ -64,6 +66,8 @@ public class Beamtimes {
                 .into(Lists.newArrayList(),
                         (result, throwable) -> {
                             logger.debug("Done!");
+                            if(throwable != null) response.resume(throwable);
+                            else
                             response.resume(result);
                         });
     }
