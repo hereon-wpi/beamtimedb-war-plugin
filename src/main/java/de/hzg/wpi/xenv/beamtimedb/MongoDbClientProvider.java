@@ -3,12 +3,10 @@ package de.hzg.wpi.xenv.beamtimedb;
 import com.mongodb.async.client.MongoClient;
 import com.mongodb.async.client.MongoClients;
 import org.jboss.resteasy.core.ResteasyContext;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Priority;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -18,7 +16,6 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
 
 /**
  * @author Igor Khokhriakov <igor.khokhriakov@hzg.de>
@@ -44,7 +41,7 @@ public class MongoDbClientProvider implements ContainerRequestFilter, ServletCon
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        String mongodbHost = sce.getServletContext().getInitParameter("mongodb.host");
+        String mongodbHost = System.getenv("MONGODB_HOST");
         MongoClient mongoClient = MongoClients.create(String.format("mongodb://%s", mongodbHost));
         logger.info(String.format("MongoDB[%s] client has been created", mongodbHost));
         sce.getServletContext().setAttribute(MongoClient.class.getSimpleName(), mongoClient);

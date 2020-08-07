@@ -35,7 +35,6 @@
         <mongodb-driver.version>3.11.2</mongodb-driver.version>
         <slf4j-api.version>1.7.5</slf4j-api.version>
         <custom.build.name>beamtimedb</custom.build.name>
-        <mongodb.host>localhost</mongodb.host>
     </properties>
 
 
